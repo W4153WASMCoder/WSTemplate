@@ -70,7 +70,7 @@ export class Project {
             limit,
             offset,
             filters = {},
-            sort = "ProjectID",
+            sort = "project_id",
             order = "asc",
         } = options;
 
@@ -78,12 +78,12 @@ export class Project {
         const filterValues: any[] = [];
 
         if (filters.ProjectName) {
-            filterClauses += " AND ProjectName LIKE ?";
+            filterClauses += " AND project_name LIKE ?";
             filterValues.push(`%${filters.ProjectName}%`);
         }
 
         if (filters.OwningUserID !== undefined) {
-            filterClauses += " AND OwningUserID = ?";
+            filterClauses += " AND owning_user_id = ?";
             filterValues.push(filters.OwningUserID);
         }
 
@@ -129,7 +129,7 @@ export class Project {
         if (this.ProjectID) {
             // Update existing project
             await pool.query(
-                "UPDATE Project SET OwningUserID = ?, ProjectName = ?, CreationDate = ? WHERE ProjectID = ?",
+                "UPDATE Project SET OwningUserID = ?, ProjectName = ?, CreationDate = ? WHERE project_id = ?",
                 [
                     this._owningUserID,
                     this._projectName,
@@ -242,7 +242,7 @@ export class ProjectFile {
     static async find(FileID: number): Promise<ProjectFile | null> {
         try {
             const [rows] = await pool.query<RowDataPacket[]>(
-                "SELECT * FROM ProjectFiles WHERE FileID = ?",
+                "SELECT * FROM project_files WHERE FileID = ?",
                 [FileID],
             );
 
@@ -317,7 +317,12 @@ export class ProjectFile {
         }
 
         // Validate 'sort' and 'order' parameters to prevent SQL injection
-        const validSortFields = ["FileID", "FileName", "CreationDate"];
+        const validSortFields = [
+            "file_id",
+            "filename",
+            "create_date",
+            "is_dir",
+        ];
         if (!validSortFields.includes(sort)) {
             throw new Error(`Invalid sort field: ${sort}`);
         }
@@ -327,8 +332,8 @@ export class ProjectFile {
             throw new Error(`Invalid order value: ${order}`);
         }
 
-        const totalQuery = `SELECT COUNT(*) as total FROM ProjectFiles WHERE 1=1${filterClauses}`;
-        const dataQuery = `SELECT * FROM ProjectFiles WHERE 1=1${filterClauses} ORDER BY ${sort} ${order} LIMIT ? OFFSET ?`;
+        const totalQuery = `SELECT COUNT(*) as total FROM project_files WHERE 1=1${filterClauses}`;
+        const dataQuery = `SELECT * FROM project_files WHERE 1=1${filterClauses} ORDER BY ${sort} ${order} LIMIT ? OFFSET ?`;
 
         try {
             // Get total count
@@ -376,7 +381,7 @@ export class ProjectFile {
         if (this.FileID) {
             // Update existing file
             await pool.query(
-                "UPDATE ProjectFiles SET ProjectID = ?, ParentDirectory = ?, FileName = ?, IsDirectory = ?, CreationDate = ? WHERE FileID = ?",
+                "UPDATE project_files SET ProjectID = ?, ParentDirectory = ?, FileName = ?, IsDirectory = ?, CreationDate = ? WHERE FileID = ?",
                 [
                     this._projectID,
                     this._parentDirectory,
@@ -389,7 +394,7 @@ export class ProjectFile {
         } else {
             // Insert new file and get the ID
             const [result]: any = await pool.query(
-                "INSERT INTO ProjectFiles (ProjectID, ParentDirectory, FileName, IsDirectory, CreationDate) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO project_files (ProjectID, ParentDirectory, FileName, IsDirectory, CreationDate) VALUES (?, ?, ?, ?, ?)",
                 [
                     this._projectID,
                     this._parentDirectory,
@@ -408,7 +413,7 @@ export class ProjectFile {
         try {
             // Check if file exists
             const [rows] = await pool.query<RowDataPacket[]>(
-                "SELECT * FROM ProjectFiles WHERE file_id = ?",
+                "SELECT * FROM project_files WHERE file_id = ?",
                 [id],
             );
 
@@ -418,7 +423,7 @@ export class ProjectFile {
             }
 
             // Proceed to delete the user
-            await pool.query("DELETE FROM ProjectFiles WHERE file_id = ?", [
+            await pool.query("DELETE FROM project_files WHERE file_id = ?", [
                 id,
             ]);
             return true;

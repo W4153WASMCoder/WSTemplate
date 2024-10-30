@@ -149,7 +149,7 @@ router.get(
             ProjectID,
             FileName,
             IsDirectory,
-            sort = "FileID",
+            sort = "file_id",
             order = "asc",
         } = req.query;
 
@@ -162,7 +162,7 @@ router.get(
         }
 
         // Validate 'sort' parameter
-        const validSortFields = ["FileID", "FileName", "CreationDate"];
+        const validSortFields = ["file_id", "file_name", "create_date"];
         if (!validSortFields.includes(sort as string)) {
             res.status(400).json({
                 error: `Invalid sort parameter. Must be one of ${validSortFields.join(", ")}.`,

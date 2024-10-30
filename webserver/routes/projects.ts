@@ -134,7 +134,7 @@ router.get(
         const {
             ProjectName,
             OwningUserID,
-            sort = "ProjectID",
+            sort = "project_id",
             order = "asc",
         } = req.query;
 
@@ -147,8 +147,9 @@ router.get(
         }
 
         // Validate 'sort' parameter
-        const validSortFields = ["ProjectID", "ProjectName", "CreationDate"];
+        const validSortFields = ["project_id", "project_name", "create_date"];
         if (!validSortFields.includes(sort as string)) {
+            console.log(sort);
             res.status(400).json({
                 error: `Invalid sort parameter. Must be one of ${validSortFields.join(", ")}.`,
             });
