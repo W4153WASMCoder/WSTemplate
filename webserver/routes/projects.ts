@@ -2,6 +2,7 @@
 import { Router, Request, Response } from "express";
 import { Project } from "../models/files_models.js";
 import { paginate } from "../middleware/pagination.js";
+import { generateHATEOASLinks } from "../lib/hateoas.js";
 
 const router = Router();
 
@@ -169,35 +170,7 @@ router.get(
                 order: order as "asc" | "desc",
             });
 
-            // Generate HATEOAS links (adjusted to include query parameters)
-            const baseUrl = `${req.protocol}://${req.get("host")}${req.baseUrl}`;
-            const queryParams = new URLSearchParams({
-                ...(req.query as any),
-                limit: limit.toString(),
-                offset: offset.toString(),
-            });
-            const links: any = {
-                self: `${baseUrl}?${queryParams.toString()}`,
-                first: `${baseUrl}?${queryParams.toString().replace(`offset=${offset}`, "offset=0")}`,
-                last: `${baseUrl}?${queryParams
-                    .toString()
-                    .replace(
-                        `offset=${offset}`,
-                        `offset=${Math.floor((total - 1) / limit) * limit}`,
-                    )}`,
-            };
-
-            if (offset + limit < total) {
-                links.next = `${baseUrl}?${queryParams
-                    .toString()
-                    .replace(`offset=${offset}`, `offset=${offset + limit}`)}`;
-            }
-
-            if (offset - limit >= 0) {
-                links.prev = `${baseUrl}?${queryParams
-                    .toString()
-                    .replace(`offset=${offset}`, `offset=${offset - limit}`)}`;
-            }
+            const links = generateHATEOASLinks(req, total, limit, offset);
 
             res.json({
                 total,
